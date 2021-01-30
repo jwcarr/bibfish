@@ -1,6 +1,11 @@
 import argparse
 import re
 
+try:
+    from ._version import __version__
+except ImportError:
+    __version__ = "???"
+
 
 def extract_citekeys(manuscript_file, cite_commands):
     """
@@ -78,6 +83,7 @@ def shorten_dois(bibtex_entries):
 
 def cli():
     parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--version", action="version", version=__version__)
     parser.add_argument(
         "manuscript_file",
         action="store",
@@ -98,10 +104,10 @@ def cli():
     )
     parser.add_argument(
         "--cc",
-        dest="cite_commands",
         action="store",
         type=str,
         default="citet,citep",
+        dest="cite_commands",
         help="cite commands separated by commas",
     )
     parser.add_argument(
@@ -111,6 +117,7 @@ def cli():
         dest="shorten_dois",
         help="shorten DOIs",
     )
+
     args = parser.parse_args()
     citekeys = extract_citekeys(args.manuscript_file, args.cite_commands)
     bibtex_entries = extract_bibtex_entries(args.master_bib_file, citekeys)
