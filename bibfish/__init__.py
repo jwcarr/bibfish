@@ -15,7 +15,6 @@ def extract_citekeys(manuscript_file, cite_commands):
     with open(manuscript_file, "r") as file:
         manuscript = file.read()
     manuscript = manuscript.split(r"\begin{document}")[1]
-    cite_commands = cite_commands.split(",")
     citations = re.findall(
         r"\\(" + "|".join(cite_commands) + r").*?\{(.*?)\}", manuscript
     )
@@ -88,19 +87,19 @@ def cli():
         "manuscript_file",
         action="store",
         type=str,
-        help=".tex file to extract citekeys from",
+        help="LaTeX file to extract citekeys from",
     )
     parser.add_argument(
         "master_bib_file",
         action="store",
         type=str,
-        help=".bib file to extract references from",
+        help="Master .bib file to extract references from",
     )
     parser.add_argument(
         "bib_file",
         action="store",
         type=str,
-        help=".bib file to write references out to",
+        help="Local .bib file to write references out to",
     )
     parser.add_argument(
         "--cc",
@@ -108,18 +107,17 @@ def cli():
         type=str,
         default="citet,citep",
         dest="cite_commands",
-        help="cite commands separated by commas",
+        help="Cite commands separated by commas (default: 'citet,citep')",
     )
     parser.add_argument(
         "--sdoi",
         action="store_true",
         default=False,
         dest="shorten_dois",
-        help="shorten DOIs",
+        help="Shorten DOIs using http://shortdoi.org/",
     )
-
     args = parser.parse_args()
-    citekeys = extract_citekeys(args.manuscript_file, args.cite_commands)
+    citekeys = extract_citekeys(args.manuscript_file, args.cite_commands.split(","))
     bibtex_entries = extract_bibtex_entries(args.master_bib_file, citekeys)
     if args.shorten_dois:
         bibtex_entries = shorten_dois(bibtex_entries)
