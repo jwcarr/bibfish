@@ -1,3 +1,4 @@
+from os.path import isfile
 import argparse
 import re
 
@@ -45,7 +46,7 @@ def extract_bibtex_entries(master_bib_file, citekeys=[]):
             r"@.*?\{" + citekey + r"[\s\S]+?\n\}\n", master_bib, re.UNICODE
         )
         if match is None:
-            print('Citekey "%s" is missing from %s' % (citekey, master_bib_file))
+            print(f"-> Citekey '{citekey}' was not found in {master_bib_file}")
         else:
             bibtex_entries.append((citekey, match.group(0)))
     return [entry[1] for entry in sorted(bibtex_entries)]
@@ -73,7 +74,7 @@ def shorten_dois(bibtex_entries):
     try:
         import requests
     except ImportError:
-        print("DOI shortening requires the requests package. pip install requests")
+        print("-> DOI shortening requires the requests package. pip install requests")
         return bibtex_entries
     import json
 
@@ -96,6 +97,7 @@ def main(
     manuscript_file,
     master_bib_file,
     local_bib_file,
+    force_overwrite=False,
     cite_commands=[],
     shorten_dois=False,
 ):
@@ -105,11 +107,14 @@ def main(
     in a manuscript file.
 
     """
-    citekeys = extract_citekeys(manuscript_file, cite_commands)
-    bibtex_entries = extract_bibtex_entries(master_bib_file, citekeys)
-    if shorten_dois:
-        bibtex_entries = shorten_dois(bibtex_entries)
-    create_bib_file(local_bib_file, bibtex_entries)
+    if not force_overwrite and isfile(local_bib_file):
+        print(f"-> {local_bib_file} already exists. Use -f to force overwrite.")
+    else:
+        citekeys = extract_citekeys(manuscript_file, cite_commands)
+        bibtex_entries = extract_bibtex_entries(master_bib_file, citekeys)
+        if shorten_dois:
+            bibtex_entries = shorten_dois(bibtex_entries)
+        create_bib_file(local_bib_file, bibtex_entries)
 
 
 def cli():
@@ -141,6 +146,14 @@ def cli():
         help="Local .bib file to write BibTeX entries to",
     )
     parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        dest="force_overwrite",
+        help="Overwrite the local .bib file if it already exists",
+    )
+    parser.add_argument(
         "--cc",
         action="store",
         type=str,
@@ -159,6 +172,7 @@ def cli():
         args.manuscript_file,
         args.master_bib_file,
         args.local_bib_file,
+        args.force_overwrite,
         args.cite_commands.split(","),
         args.shorten_dois,
     )

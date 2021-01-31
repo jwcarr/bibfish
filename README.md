@@ -16,7 +16,7 @@ For example, given that `manuscript.tex` contains a reference to `references.bib
 ```shell
 #!/bin/bash
 
-bibfish manuscript.tex ~/master.bib references.bib
+bibfish -f manuscript.tex ~/master.bib references.bib
 latex manuscript.tex
 bibtex manuscript.aux
 latex manuscript.tex
@@ -47,10 +47,16 @@ Once installed, `bibfish` may be used from the command line like this:
 bibfish manuscript.tex ~/master.bib references.bib
 ```
 
+By default, `bibfish` will not overwrite a local .bib file if it already exists. To override this, use the `-f` option:
+
+```shell
+bibfish -f manuscript.tex ~/master.bib references.bib
+```
+
 By default, `bibfish` searches your manuscript for `\citet{}` and `\citep{}`. If you are using a different set of cite commands, you can specify them with the `--cc` option:
 
 ```shell
-bibfish manuscript.tex ~/master.bib references.bib --cc "textcite,parencite,possessivecite"
+bibfish --cc "textcite,parencite,possessivecite" manuscript.tex ~/master.bib references.bib
 ```
 
 
