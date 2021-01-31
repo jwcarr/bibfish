@@ -7,11 +7,15 @@ except ImportError:
     __version__ = "???"
 
 
-def extract_citekeys(manuscript_file, cite_commands):
+def extract_citekeys(manuscript_file, cite_commands=[]):
     """
-    Search manuscript_file for any cite commands and return the citekeys
-    they make reference to.
+
+    Search manuscript_file for any cite commands and return the citekeys they
+    make reference to.
+
     """
+    if len(cite_commands) == 0:
+        return []
     with open(manuscript_file, "r") as file:
         manuscript = file.read()
     manuscript = manuscript.split(r"\begin{document}")[1]
@@ -24,11 +28,15 @@ def extract_citekeys(manuscript_file, cite_commands):
     return list(set(citekeys))
 
 
-def extract_bibtex_entries(master_bib_file, citekeys):
+def extract_bibtex_entries(master_bib_file, citekeys=[]):
     """
-    Extract bibtex entries from master_bib_file that have certain
-    citekeys. Return the entries sorted by citekey.
+
+    Extract bibtex entries from master_bib_file that have certain citekeys.
+    Return the entries sorted by citekey.
+
     """
+    if len(citekeys) == 0:
+        return []
     with open(master_bib_file, "r", encoding="utf-8") as file:
         master_bib = file.read()
     bibtex_entries = []
@@ -43,20 +51,24 @@ def extract_bibtex_entries(master_bib_file, citekeys):
     return [entry[1] for entry in sorted(bibtex_entries)]
 
 
-def create_bib_file(bibtex_entries, bib_file):
+def create_bib_file(local_bib_file, bibtex_entries=[]):
     """
-    Write out some bibtex entries to bib_file.
+
+    Write out some bibtex entries to local_bib_file.
+
     """
-    with open(bib_file, "w", encoding="utf-8") as file:
+    with open(local_bib_file, "w", encoding="utf-8") as file:
         for entry in bibtex_entries:
             file.write(entry + "\n")
 
 
 def shorten_dois(bibtex_entries):
     """
+
     Given some bibtex entries, check each one for a doi field and, if it
     contains one, attempt to replace the doi with its short version as
     provided by shortdoi.org.
+
     """
     try:
         import requests
@@ -80,8 +92,35 @@ def shorten_dois(bibtex_entries):
     return new_bibtex_entries
 
 
+def main(
+    manuscript_file,
+    master_bib_file,
+    local_bib_file,
+    cite_commands=[],
+    shorten_dois=False,
+):
+    """
+
+    Create a new local bib file from a master bib file based on the citations
+    in a manuscript file.
+
+    """
+    citekeys = extract_citekeys(manuscript_file, cite_commands)
+    bibtex_entries = extract_bibtex_entries(master_bib_file, citekeys)
+    if shorten_dois:
+        bibtex_entries = shorten_dois(bibtex_entries)
+    create_bib_file(local_bib_file, bibtex_entries)
+
+
 def cli():
-    parser = argparse.ArgumentParser()
+    """
+
+    Command line interface
+
+    """
+    parser = argparse.ArgumentParser(
+        description="Extract entries from a .bib file that are cited in a .tex file."
+    )
     parser.add_argument("-v", "--version", action="version", version=__version__)
     parser.add_argument(
         "manuscript_file",
@@ -93,13 +132,13 @@ def cli():
         "master_bib_file",
         action="store",
         type=str,
-        help="Master .bib file to extract references from",
+        help="Master .bib file to extract BibTeX entries from",
     )
     parser.add_argument(
-        "bib_file",
+        "local_bib_file",
         action="store",
         type=str,
-        help="Local .bib file to write references out to",
+        help="Local .bib file to write BibTeX entries to",
     )
     parser.add_argument(
         "--cc",
@@ -112,13 +151,14 @@ def cli():
     parser.add_argument(
         "--sdoi",
         action="store_true",
-        default=False,
         dest="shorten_dois",
         help="Shorten DOIs using http://shortdoi.org/",
     )
     args = parser.parse_args()
-    citekeys = extract_citekeys(args.manuscript_file, args.cite_commands.split(","))
-    bibtex_entries = extract_bibtex_entries(args.master_bib_file, citekeys)
-    if args.shorten_dois:
-        bibtex_entries = shorten_dois(bibtex_entries)
-    create_bib_file(bibtex_entries, args.bib_file)
+    main(
+        args.manuscript_file,
+        args.master_bib_file,
+        args.local_bib_file,
+        args.cite_commands.split(","),
+        args.shorten_dois,
+    )
