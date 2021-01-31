@@ -1,7 +1,7 @@
 bibfish
 =======
 
-`bibfish` is a command line utility that extracts BibTeX entries cited in a LaTeX file from a central database. This is useful if you want to maintain a single master BibTeX file and automatically generate a separate, independent BibTeX file for each manuscript you're working on. It is similar to [bibexport](https://www.ctan.org/tex-archive/biblio/bibtex/utils/bibexport/) and [makebib](https://gitlab.com/Verner/makebib), except `bibfish` is not dependent on any particular LaTeX tool and is therefore agnostic about your choice of bibliographic software (BibTeX vs. BibLaTeX, etc) or general typesetting pipeline.
+`bibfish` generates a local BibTeX file from a central BibTeX database based on the citations found in a LaTeX file. This is useful if you want to maintain a single master BibTeX file and automatically generate a separate, independent BibTeX file for each manuscript you're working on. It is similar to [bibexport](https://www.ctan.org/tex-archive/biblio/bibtex/utils/bibexport/) and [makebib](https://gitlab.com/Verner/makebib), except `bibfish` is not dependent on any particular LaTeX tool and is therefore agnostic about your choice of bibliographic software (BibTeX vs. BibLaTeX, etc) or general typesetting pipeline.
 
 `bibfish` can be run once if all you want to do is create a subset of your `master.bib` to send to the publisher. Alternatively, `bibfish` can be used as an integral part of your typesetting procedure, with an intended usage pattern like this:
 
@@ -31,7 +31,7 @@ The benefit of this is that your LaTeX document does not need to have any depend
 Installation
 ------------
 
-`bibfish` can be installed using pip:
+`bibfish` is written in Python and can be installed using pip:
 
 ```shell
 pip install bibfish
