@@ -24,6 +24,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Science/Research",
+        "Topic :: Text Processing :: Markup :: LaTeX",
     ],
     python_requires=">=3.6",
     setup_requires=["setuptools_scm"],
