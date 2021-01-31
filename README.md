@@ -5,13 +5,13 @@ bibfish
 
 `bibfish` can be run once if all you want to do is create a subset of your `master.bib` to send to the publisher. Alternatively, `bibfish` can be used as an integral part of your typesetting procedure, with an intended usage pattern like this:
 
-1. Start a new LaTeX document and, when setting up the bibliography, point it to e.g. `references.bib` (no need to create this file; it will be generated automatically)
-2. Add any BibTeX entries you want to cite to your `master.bib` (stored e.g. in your home directory)
-3. Cite some BibTeX entries in your LaTeX document using their citekeys as normal
-4. Each time you typeset, first run `bibfish`; this will fish out the relevant entries from `master.bib` and place them in `references.bib`
-5. Continue with the rest of your typesetting procedure, e.g. run `pdflatex`, `latex`, `bibtex`, `biber`, or whatever else you normally do in your pipeline
+1. Start a new LaTeX document and, when setting up the bibliography, point it to e.g. `references.bib` (no need to create this file; it will be generated automatically). For example, depending on how you set things up, you might have a line like `\bibliography{references.bib}` or `\addbibresource{references.bib}`.
+2. Add any BibTeX entries you want to cite to your `master.bib` (stored e.g. in your home directory).
+3. Cite some BibTeX entries in your LaTeX document using their citekeys as normal.
+4. Before typesetting, run `bibfish` first; this will fish out the relevant entries from `master.bib` and place them in `references.bib`.
+5. Continue with the rest of your typesetting procedure, e.g. run `pdflatex`, `latex`, `xelatex`, `bibtex`, `biber`, `dvipdf`, or whatever else you normally do in your pipeline.
 
-For example, given that `manuscript.tex` contains a reference to `references.bib` and cites BibTeX entries contained in `~/master.bib`, you might have a typesetting script like this:
+For example, you might create a typesetting script like this:
 
 ```shell
 #!/bin/bash
@@ -23,7 +23,7 @@ latex manuscript.tex
 dvipdfm manuscript.dvi
 ```
 
-Thus, each time you run this script, `bibfish` will search `manuscript.tex` for citekeys, extract the relevant entries from `~/master.bib`, and write them out to `references.bib`, allowing the rest of the typesetting process to proceed as normal.
+Each time you run this script, `bibfish` will search `manuscript.tex` for citekeys, extract the relevant entries from `~/master.bib`, and write them out to `references.bib`, allowing the rest of the typesetting process to proceed as normal.
 
 The benefit of this is that your LaTeX document does not need to have any dependence on or reference to `~/master.bib`. This means you can maintain a single `master.bib`, while also maintaining each manuscript as its own independent self-contained package. You could, for example, send `manuscript.tex` and `references.bib` to a coauthor or publisher without needing to supply your entire `master.bib`, and `manuscript.tex` and `references.bib` can be kept under version control without any connection to `master.bib`.
 
@@ -47,7 +47,7 @@ Once installed, `bibfish` may be used from the command line like this:
 bibfish manuscript.tex ~/master.bib references.bib
 ```
 
-By default, `bibfish` will not overwrite a local .bib file if it already exists. To override this, use the `-f` option:
+By default, `bibfish` will not overwrite a local .bib file if it already exists. To override this behavior, use the `-f` option:
 
 ```shell
 bibfish -f manuscript.tex ~/master.bib references.bib
