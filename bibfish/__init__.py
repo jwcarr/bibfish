@@ -8,7 +8,7 @@ except ImportError:
     __version__ = "???"
 
 
-def extract_citekeys(manuscript_file, cite_commands=[]):
+def extract_citekeys(manuscript_file, cite_commands):
     """
 
     Search manuscript_file for any cite commands and return the citekeys they
@@ -29,7 +29,7 @@ def extract_citekeys(manuscript_file, cite_commands=[]):
     return list(set(citekeys))
 
 
-def extract_bibtex_entries(master_bib_file, citekeys=[]):
+def extract_bibtex_entries(master_bib_file, citekeys):
     """
 
     Extract bibtex entries from master_bib_file that have certain citekeys.
@@ -52,7 +52,7 @@ def extract_bibtex_entries(master_bib_file, citekeys=[]):
     return [entry[1] for entry in sorted(bibtex_entries)]
 
 
-def create_bib_file(local_bib_file, bibtex_entries=[]):
+def create_bib_file(local_bib_file, bibtex_entries):
     """
 
     Write out some bibtex entries to local_bib_file.
@@ -97,8 +97,8 @@ def main(
     manuscript_file,
     master_bib_file,
     local_bib_file,
+    cite_commands,
     force_overwrite=False,
-    cite_commands=[],
     shorten_dois=False,
 ):
     """
@@ -146,20 +146,20 @@ def cli():
         help="Local .bib file to write BibTeX entries to",
     )
     parser.add_argument(
-        "-f",
-        "--force",
-        action="store_true",
-        default=False,
-        dest="force_overwrite",
-        help="Overwrite the local .bib file if it already exists",
-    )
-    parser.add_argument(
         "--cc",
         action="store",
         type=str,
         default="citet,citep",
         dest="cite_commands",
         help="Cite commands separated by commas (default: 'citet,citep')",
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        dest="force_overwrite",
+        help="Overwrite the local .bib file if it already exists",
     )
     parser.add_argument(
         "--sdoi",
@@ -172,7 +172,7 @@ def cli():
         args.manuscript_file,
         args.master_bib_file,
         args.local_bib_file,
-        args.force_overwrite,
         args.cite_commands.split(","),
+        args.force_overwrite,
         args.shorten_dois,
     )
