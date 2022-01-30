@@ -99,7 +99,7 @@ def main(
     local_bib_file,
     cite_commands,
     force_overwrite=False,
-    shorten_dois=False,
+    short_dois=False,
 ):
     """
 
@@ -112,7 +112,7 @@ def main(
     else:
         citekeys = extract_citekeys(manuscript_file, cite_commands)
         bibtex_entries = extract_bibtex_entries(master_bib_file, citekeys)
-        if shorten_dois:
+        if short_dois:
             bibtex_entries = shorten_dois(bibtex_entries)
         create_bib_file(local_bib_file, bibtex_entries)
 
@@ -164,7 +164,7 @@ def cli():
     parser.add_argument(
         "--sdoi",
         action="store_true",
-        dest="shorten_dois",
+        dest="short_dois",
         help="Shorten DOIs using http://shortdoi.org/",
     )
     args = parser.parse_args()
@@ -174,5 +174,5 @@ def cli():
         args.local_bib_file,
         args.cite_commands.split(","),
         args.force_overwrite,
-        args.shorten_dois,
+        args.short_dois,
     )
