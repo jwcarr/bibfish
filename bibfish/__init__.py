@@ -43,7 +43,7 @@ def extract_bibtex_entries(master_bib_file, citekeys):
     bibtex_entries = []
     for citekey in citekeys:
         match = re.search(
-            r"@.*?\{" + citekey + r"[\s\S]+?\n\}\n", master_bib, re.UNICODE
+            r"@.*?\{" + citekey + r"\,[\s\S]+?\n\}\n", master_bib, re.UNICODE
         )
         if match is None:
             print(f"-> Citekey '{citekey}' was not found in {master_bib_file}")
