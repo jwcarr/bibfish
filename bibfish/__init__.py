@@ -25,7 +25,9 @@ def extract_citekeys(manuscript_file, cite_commands):
     )
     citekeys = []
     for citation in citations:
-        citekeys.extend(citation[1].replace(" ", "").split(","))
+        for key in citation[1].replace(" ", "").split(","):
+            if key:
+                citekeys.append(key)
     return list(set(citekeys))
 
 
