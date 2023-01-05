@@ -19,16 +19,40 @@ def extract_citekeys(manuscript_file, cite_commands):
         return []
     with open(manuscript_file, "r") as file:
         manuscript = file.read()
-    manuscript = manuscript.split(r"\begin{document}")[1]
+    citekeys = []
+    for nestfile in find_imported_files(manuscript):
+        try:
+            citekeys += extract_citekeys(nestfile, cite_commands)
+        except FileNotFoundError:
+            pass
     citations = re.findall(
         r"\\(" + "|".join(cite_commands) + r").*?\{(.*?)\}", manuscript
     )
-    citekeys = []
     for citation in citations:
         for key in citation[1].replace(" ", "").split(","):
             if key:
                 citekeys.append(key)
     return list(set(citekeys))
+
+
+def find_imported_files(manuscript):
+    includeinputfiles = re.findall(r"\\(include|input).*?\{(.*?)\}", manuscript)
+    importfiles = re.findall(r"\\import.*?\{(.*?)\}.*?\{(.*?)\}", manuscript)
+    found_filenames = []
+    filenames = []
+    for inputfile in includeinputfiles:
+        if inputfile[1]:
+            found_filenames.append(inputfile[1])
+    for inputfile in importfiles:
+        if inputfile[1]:
+            found_filenames.append(inputfile[0] + inputfile[1])
+    for filename in found_filenames:
+        if "." in filename:
+            if filename[-4:] == ".tex":
+                filenames.append(filename)
+        else:
+            filenames.append(filename + ".tex")
+    return filenames
 
 
 def extract_bibtex_entries(master_bib_file, citekeys):
