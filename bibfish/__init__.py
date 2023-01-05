@@ -151,9 +151,9 @@ def cli():
         "--cc",
         action="store",
         type=str,
-        default="citet,citep",
+        default="cite,citet,citep",
         dest="cite_commands",
-        help="Cite commands separated by commas (default: 'citet,citep')",
+        help="Cite commands separated by commas (default: 'cite,citet,citep')",
     )
     parser.add_argument(
         "-f",
