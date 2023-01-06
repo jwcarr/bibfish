@@ -10,10 +10,9 @@ except ImportError:
 
 def extract_citekeys(manuscript_file, cite_commands):
     """
-
     Search manuscript_file for any cite commands and return the citekeys they
-    make reference to.
-
+    make reference to. If the manuscript has any nested files (through input,
+    import, or include), these will be resursively expanded.
     """
     if len(cite_commands) == 0:
         return []
@@ -40,6 +39,11 @@ def extract_citekeys(manuscript_file, cite_commands):
 
 
 def find_imported_files(manuscript):
+    """
+    Search a manuscript file for input, import, and include, and return any
+    filenames found, so that these can be resursively expanded. The filename
+    may have a .tex extension or no extension.
+    """
     includeinputfiles = re.findall(r"\\(include|input).*?\{(.*?)\}", manuscript)
     importfiles = re.findall(r"\\import.*?\{(.*?)\}.*?\{(.*?)\}", manuscript)
     found_filenames = []
@@ -61,10 +65,8 @@ def find_imported_files(manuscript):
 
 def extract_bibtex_entries(master_bib_file, citekeys):
     """
-
     Extract bibtex entries from master_bib_file that have certain citekeys.
     Return the entries sorted by citekey.
-
     """
     if len(citekeys) == 0:
         return []
@@ -84,9 +86,7 @@ def extract_bibtex_entries(master_bib_file, citekeys):
 
 def create_bib_file(local_bib_file, bibtex_entries):
     """
-
     Write out some bibtex entries to local_bib_file.
-
     """
     with open(local_bib_file, "w", encoding="utf-8") as file:
         for entry in bibtex_entries:
@@ -95,11 +95,9 @@ def create_bib_file(local_bib_file, bibtex_entries):
 
 def shorten_dois(bibtex_entries):
     """
-
     Given some bibtex entries, check each one for a doi field and, if it
     contains one, attempt to replace the doi with its short version as
     provided by shortdoi.org.
-
     """
     try:
         import requests
@@ -132,10 +130,8 @@ def main(
     short_dois=False,
 ):
     """
-
     Create a new local bib file from a master bib file based on the citations
     in a manuscript file.
-
     """
     if not force_overwrite and isfile(local_bib_file):
         print(f"-> {local_bib_file} already exists. Use -f to force overwrite.")
@@ -149,9 +145,7 @@ def main(
 
 def cli():
     """
-
     Command line interface
-
     """
     parser = argparse.ArgumentParser(
         description="Extract entries from a .bib file that are cited in a .tex file."
