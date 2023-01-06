@@ -20,6 +20,10 @@ def extract_citekeys(manuscript_file, cite_commands):
     with open(manuscript_file, "r") as file:
         manuscript = file.read()
     citekeys = []
+    try:
+        manuscript = manuscript.split(r"\begin{document}")[1]
+    except IndexError:
+        pass
     for nestfile in find_imported_files(manuscript):
         try:
             citekeys += extract_citekeys(nestfile, cite_commands)
