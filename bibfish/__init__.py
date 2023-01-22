@@ -151,19 +151,14 @@ def main(
     in a manuscript file.
     """
     if not force_overwrite and isfile(local_bib_file):
-        print(f"-> {local_bib_file} already exists. Use -f to force overwrite.")
+        print(f"{local_bib_file} already exists. Use -f to force overwrite.")
     else:
         citekeys = extract_citekeys(manuscript_file, cite_commands)
-        print(f"Found {len(citekeys)} cite keys.")
-
         if not isinstance(master_bib_file, list):
             master_bib_file = [master_bib_file]
         bibtex_db = parse_bibtex_entries(master_bib_file, citekeys)
         if short_dois:
             bibtex_db = shorten_dois_in_db(bibtex_db)
-
-        print(f"Fished {len(bibtex_db.entries)} BibTeX entries.")
-
         with open(local_bib_file, "w") as f:
             bibtexparser.dump(bibtex_db, f)
 
