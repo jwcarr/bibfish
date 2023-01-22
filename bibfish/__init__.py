@@ -1,6 +1,11 @@
 from os.path import isfile
 import argparse
+import json
 import re
+import urllib.request
+
+import bibtexparser
+from bibtexparser.bibdatabase import BibDatabase
 
 try:
     from ._version import __version__
@@ -63,6 +68,51 @@ def find_imported_files(manuscript):
     return filenames
 
 
+def parse_bibtex_entries(bib_files: list, citekeys: list) -> BibDatabase:
+    """
+    Return a bibtexparser.bibdatabase.BibDatabase which contains only the
+    entries in *bib_files* which match *citekeys*.
+    """
+    out_db = BibDatabase()
+    for p in bib_files:
+        with open(p) as f:
+            bib_database = bibtexparser.load(
+                f,
+                parser=bibtexparser.bparser.BibTexParser(
+                    interpolate_strings=True,
+                    ignore_nonstandard_types=False,
+                )
+            )
+            out_db = update_bibdatabase(out_db, bib_database)
+
+    out_dict = out_db.entries_dict
+    entries = list()
+    for k in citekeys:
+        if k in out_dict.keys():
+            entries.append(out_dict[k])
+        else:
+            print(f"-> Citekey '{k}' was not found in {bib_files}")
+
+    out_db.entries = entries
+
+    return out_db
+
+
+def update_bibdatabase(first: BibDatabase, second: BibDatabase) -> BibDatabase:
+    """Update the *first* BibDatabase object with information from the *second*."""
+    # This just does the work on the publicly available properties of BibDatabase.
+    # Perhaps in some future version of BibtexParser the BibDatabase object will
+    # know how to update itself.
+    entry_dict = first.entries_dict
+    entry_dict.update(second.entries_dict)
+
+    first.entries = list(entry_dict.values())
+    first.strings.update(second.strings)
+    first.preambles.extend(second.preambles)
+
+    return first
+
+
 def extract_bibtex_entries(master_bib_file, citekeys):
     """
     Extract bibtex entries from master_bib_file that have certain citekeys.
@@ -99,31 +149,45 @@ def shorten_dois(bibtex_entries):
     contains one, attempt to replace the doi with its short version as
     provided by shortdoi.org.
     """
-    try:
-        import requests
-    except ImportError:
-        print("-> DOI shortening requires the requests package. pip install requests")
-        return bibtex_entries
-    import json
-
     new_bibtex_entries = []
     for entry in bibtex_entries:
         match = re.search(r"doi = \{(.+)\}", entry, re.UNICODE)
         if match is not None:
             doi = match.group(1).replace(r"\_", "_")
-            short_doi_query = "http://shortdoi.org/" + doi + "?format=json"
-            request = requests.get(short_doi_query)
-            response = json.loads(request.text)
-            if response["DOI"] == doi:
-                short_doi = response["ShortDOI"]
-                entry = entry.replace(doi.replace("_", r"\_"), short_doi)
+            short_doi = get_short_doi(doi)
+            entry = entry.replace(doi.replace("_", r"\_"), short_doi)
         new_bibtex_entries.append(entry)
     return new_bibtex_entries
 
 
+def shorten_dois_in_db(bib_db: BibDatabase) -> BibDatabase:
+    """
+    Returns a BibDatabase identical to the input BibDatabase, except that any
+    DOI entries are replaced by their shortdoi.org version.
+    """
+    for i, entry in enumerate(bib_db.entries):
+        if "doi" in entry:
+            bib_db.entries[i]["doi"] = get_short_doi(entry["doi"])
+
+    return bib_db
+
+
+def get_short_doi(doi: str) -> str:
+    """Return the shortdoi.org version of the provided DOI."""
+    url = "http://shortdoi.org/" + doi + "?format=json"
+
+    with urllib.request.urlopen(url) as resp:
+        response = json.load(resp)
+
+    if response["DOI"] == doi:
+        return response["ShortDOI"]
+    else:
+        return doi
+
+
 def main(
     manuscript_file,
-    master_bib_file,
+    bib_files: list,
     local_bib_file,
     cite_commands,
     force_overwrite=False,
@@ -137,10 +201,20 @@ def main(
         print(f"-> {local_bib_file} already exists. Use -f to force overwrite.")
     else:
         citekeys = extract_citekeys(manuscript_file, cite_commands)
-        bibtex_entries = extract_bibtex_entries(master_bib_file, citekeys)
+        print(f"Found {len(citekeys)} cite keys.")
+        # bibtex_entries = extract_bibtex_entries(master_bib_file, citekeys)
+        # if short_dois:
+        #     bibtex_entries = shorten_dois(bibtex_entries)
+        # create_bib_file(local_bib_file, bibtex_entries)
+        
+        bibtex_db = parse_bibtex_entries(bib_files, citekeys)
         if short_dois:
-            bibtex_entries = shorten_dois(bibtex_entries)
-        create_bib_file(local_bib_file, bibtex_entries)
+            bibtex_db = shorten_dois_in_db(bibtex_db)
+
+        print(f"Fished {len(bibtex_db.entries)} BibTeX entries.")
+    
+        with open(local_bib_file, 'w') as f:
+            bibtexparser.dump(bibtex_db, f)
 
 
 def cli():
@@ -170,6 +244,14 @@ def cli():
         help="Local .bib file to write BibTeX entries to",
     )
     parser.add_argument(
+        "-b", "--bib",
+        nargs="*",
+        help="Additional .bib files to extract BibTeX entries from.  If the same "
+             "citekey is in more than one .bib file, the information from the last "
+             "file in the list is used (the master_bib_file is considered first in "
+             "the list).",
+    )
+    parser.add_argument(
         "--cc",
         action="store",
         type=str,
@@ -192,9 +274,15 @@ def cli():
         help="Shorten DOIs using http://shortdoi.org/",
     )
     args = parser.parse_args()
+
+    bib_files = [args.master_bib_file, ]
+
+    if args.bib is not None:
+        bib_files.extend(args.bib)
+
     main(
         args.manuscript_file,
-        args.master_bib_file,
+        bib_files,
         args.local_bib_file,
         args.cite_commands.split(","),
         args.force_overwrite,
