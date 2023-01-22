@@ -91,7 +91,7 @@ def parse_bibtex_entries(bib_files: list, citekeys: list) -> BibDatabase:
         if k in out_dict.keys():
             entries.append(out_dict[k])
         else:
-            print(f"-> Citekey '{k}' was not found in {bib_files}")
+            print(f"bibfish: Citekey '{k}' was not found in {bib_files}")
 
     out_db.entries = entries
 
@@ -151,7 +151,7 @@ def main(
     in a manuscript file.
     """
     if not force_overwrite and isfile(local_bib_file):
-        print(f"{local_bib_file} already exists. Use -f to force overwrite.")
+        print(f"bibfish: {local_bib_file} already exists. Use -f to force overwrite.")
     else:
         citekeys = extract_citekeys(manuscript_file, cite_commands)
         if not isinstance(master_bib_file, list):
