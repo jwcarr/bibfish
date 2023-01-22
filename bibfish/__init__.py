@@ -74,10 +74,10 @@ def parse_bibtex_entries(bib_files: list, citekeys: list) -> BibDatabase:
     entries in *bib_files* which match *citekeys*.
     """
     out_db = BibDatabase()
-    for p in bib_files:
-        with open(p) as f:
+    for bib_file in bib_files:
+        with open(bib_file) as file:
             bib_database = bibtexparser.load(
-                f,
+                file,
                 parser=bibtexparser.bparser.BibTexParser(
                     interpolate_strings=True,
                     ignore_nonstandard_types=False,
@@ -85,13 +85,12 @@ def parse_bibtex_entries(bib_files: list, citekeys: list) -> BibDatabase:
             )
             out_db = update_bibdatabase(out_db, bib_database)
 
-    out_dict = out_db.entries_dict
-    entries = list()
-    for k in citekeys:
-        if k in out_dict.keys():
-            entries.append(out_dict[k])
+    entries = []
+    for citekey in citekeys:
+        if citekey in out_db.entries_dict.keys():
+            entries.append(out_db.entries_dict[citekey])
         else:
-            print(f"bibfish: Citekey '{k}' was not found in {bib_files}")
+            print(f"bibfish: Citekey '{citekey}' was not found in {bib_files}")
 
     out_db.entries = entries
 
@@ -159,8 +158,8 @@ def main(
         bibtex_db = parse_bibtex_entries(master_bib_file, citekeys)
         if short_dois:
             bibtex_db = shorten_dois_in_db(bibtex_db)
-        with open(local_bib_file, "w") as f:
-            bibtexparser.dump(bibtex_db, f)
+        with open(local_bib_file, "w") as file:
+            bibtexparser.dump(bibtex_db, file)
 
 
 def cli():
