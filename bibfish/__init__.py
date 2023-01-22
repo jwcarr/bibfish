@@ -140,7 +140,7 @@ def get_short_doi(doi: str) -> str:
 
 def main(
     manuscript_file,
-    bib_files: list,
+    master_bib_file,
     local_bib_file,
     cite_commands,
     force_overwrite=False,
@@ -155,8 +155,10 @@ def main(
     else:
         citekeys = extract_citekeys(manuscript_file, cite_commands)
         print(f"Found {len(citekeys)} cite keys.")
-        
-        bibtex_db = parse_bibtex_entries(bib_files, citekeys)
+
+        if not isinstance(master_bib_file, list):
+            master_bib_file = [master_bib_file]
+        bibtex_db = parse_bibtex_entries(master_bib_file, citekeys)
         if short_dois:
             bibtex_db = shorten_dois_in_db(bibtex_db)
 
@@ -225,10 +227,7 @@ def cli():
     )
     args = parser.parse_args()
 
-    bib_files = [
-        args.master_bib_file,
-    ]
-
+    bib_files = [args.master_bib_file]
     if args.bib is not None:
         bib_files.extend(args.bib)
 
