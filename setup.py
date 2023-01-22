@@ -28,6 +28,7 @@ setuptools.setup(
     ],
     python_requires=">=3.6",
     setup_requires=["setuptools_scm"],
+    install_requires=["bibtexparser"],
     entry_points={
         "console_scripts": [
             "bibfish = bibfish:cli",

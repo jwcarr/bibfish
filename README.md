@@ -1,7 +1,7 @@
 bibfish
 =======
 
-`bibfish` generates a local BibTeX file from a central BibTeX database based on the citations found in a LaTeX file. This is useful if you want to maintain a single master BibTeX file and automatically generate a separate, independent BibTeX file for each manuscript you're working on. It is similar to [bibexport](https://www.ctan.org/tex-archive/biblio/bibtex/utils/bibexport/) and [makebib](https://gitlab.com/Verner/makebib), except `bibfish` is not dependent on any particular LaTeX tool and is therefore agnostic about your choice of bibliographic software (BibTeX vs. BibLaTeX, etc) or general typesetting pipeline.
+`bibfish` generates a local BibTeX file from a central BibTeX database based on the citations found in a LaTeX file. This is useful if you want to maintain a single master BibTeX file (or several) and automatically generate a separate, independent BibTeX file for each manuscript you're working on. It is similar to [bibexport](https://www.ctan.org/tex-archive/biblio/bibtex/utils/bibexport/) and [makebib](https://gitlab.com/Verner/makebib), except `bibfish` is not dependent on any particular LaTeX tool and is therefore agnostic about your choice of bibliographic software (BibTeX vs. BibLaTeX, etc) or general typesetting pipeline.
 
 
 Installation
@@ -63,21 +63,7 @@ The benefit of this is that your LaTeX document does not need to have any depend
 Caveats
 -------
 
-I have not tested `bibfish` against any BibTeX file other than my own, and it will likely break if your `master.bib` is structured in a substantially different way. For reference, a typical entry in my `master.bib` looks like this:
-
-```bibtex
-@article{Carr:2020,
-author = {Carr, Jon W and Smith, Kenny and Culbertson, Jennifer and Kirby, Simon},
-title = {Simplicity and Informativeness in Semantic Category Systems},
-journal = {Cognition},
-year = {2020},
-volume = {202},
-pages = {Article 104289},
-doi = {10.1016/j.cognition.2020.104289}
-}
-```
-
-Note in particular that the first line of an entry should start with an `@` and the final line should contain a single `}`; everything between these two characters will be extracted and copied verbatim.
+`bibfish` uses the BibtexParser library to parse the .bib files and we think it is configured in a relatively permissive fashion.  If you have trouble with `bibfish` parsing your .bib files, please post an Issue so we can investigate it.
 
 
 License
