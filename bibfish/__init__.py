@@ -84,31 +84,28 @@ def parse_bibtex_entries(bib_files: list, citekeys: list) -> BibDatabase:
                 ),
             )
             out_db = update_bibdatabase(out_db, bib_database)
-
     entries = []
     for citekey in citekeys:
         if citekey in out_db.entries_dict.keys():
             entries.append(out_db.entries_dict[citekey])
         else:
             print(f"bibfish: Citekey '{citekey}' was not found in {bib_files}")
-
     out_db.entries = entries
-
     return out_db
 
 
 def update_bibdatabase(first: BibDatabase, second: BibDatabase) -> BibDatabase:
-    """Update the *first* BibDatabase object with information from the *second*."""
+    """
+    Update the *first* BibDatabase object with information from the *second*.
+    """
     # This just does the work on the publicly available properties of BibDatabase.
     # Perhaps in some future version of BibtexParser the BibDatabase object will
     # know how to update itself.
     entry_dict = first.entries_dict
     entry_dict.update(second.entries_dict)
-
     first.entries = list(entry_dict.values())
     first.strings.update(second.strings)
     first.preambles.extend(second.preambles)
-
     return first
 
 
@@ -120,17 +117,16 @@ def shorten_dois_in_db(bib_db: BibDatabase) -> BibDatabase:
     for i, entry in enumerate(bib_db.entries):
         if "doi" in entry:
             bib_db.entries[i]["doi"] = get_short_doi(entry["doi"])
-
     return bib_db
 
 
 def get_short_doi(doi: str) -> str:
-    """Return the shortdoi.org version of the provided DOI."""
+    """
+    Return the shortdoi.org version of the provided DOI.
+    """
     url = "http://shortdoi.org/" + doi + "?format=json"
-
     with urllib.request.urlopen(url) as resp:
         response = json.load(resp)
-
     if response["DOI"] == doi:
         return response["ShortDOI"]
     else:
