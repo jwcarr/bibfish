@@ -81,7 +81,7 @@ def parse_bibtex_entries(bib_files: list, citekeys: list) -> BibDatabase:
                 parser=bibtexparser.bparser.BibTexParser(
                     interpolate_strings=True,
                     ignore_nonstandard_types=False,
-                )
+                ),
             )
             out_db = update_bibdatabase(out_db, bib_database)
 
@@ -206,14 +206,14 @@ def main(
         # if short_dois:
         #     bibtex_entries = shorten_dois(bibtex_entries)
         # create_bib_file(local_bib_file, bibtex_entries)
-        
+
         bibtex_db = parse_bibtex_entries(bib_files, citekeys)
         if short_dois:
             bibtex_db = shorten_dois_in_db(bibtex_db)
 
         print(f"Fished {len(bibtex_db.entries)} BibTeX entries.")
-    
-        with open(local_bib_file, 'w') as f:
+
+        with open(local_bib_file, "w") as f:
             bibtexparser.dump(bibtex_db, f)
 
 
@@ -244,12 +244,13 @@ def cli():
         help="Local .bib file to write BibTeX entries to",
     )
     parser.add_argument(
-        "-b", "--bib",
+        "-b",
+        "--bib",
         nargs="*",
         help="Additional .bib files to extract BibTeX entries from.  If the same "
-             "citekey is in more than one .bib file, the information from the last "
-             "file in the list is used (the master_bib_file is considered first in "
-             "the list).",
+        "citekey is in more than one .bib file, the information from the last "
+        "file in the list is used (the master_bib_file is considered first in "
+        "the list).",
     )
     parser.add_argument(
         "--cc",
@@ -275,7 +276,9 @@ def cli():
     )
     args = parser.parse_args()
 
-    bib_files = [args.master_bib_file, ]
+    bib_files = [
+        args.master_bib_file,
+    ]
 
     if args.bib is not None:
         bib_files.extend(args.bib)
