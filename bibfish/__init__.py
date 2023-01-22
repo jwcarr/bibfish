@@ -13,7 +13,7 @@ except ImportError:
     __version__ = "???"
 
 
-def extract_citekeys(manuscript_file, cite_commands):
+def extract_citekeys(manuscript_file: str, cite_commands: list) -> list:
     """
     Search manuscript_file for any cite commands and return the citekeys they
     make reference to. If the manuscript has any nested files (through input,
@@ -43,7 +43,7 @@ def extract_citekeys(manuscript_file, cite_commands):
     return list(set(citekeys))
 
 
-def find_imported_files(manuscript):
+def find_imported_files(manuscript: str) -> list:
     """
     Search a manuscript file for input, import, and include, and return any
     filenames found, so that these can be resursively expanded. The filename
