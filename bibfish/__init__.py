@@ -113,53 +113,6 @@ def update_bibdatabase(first: BibDatabase, second: BibDatabase) -> BibDatabase:
     return first
 
 
-def extract_bibtex_entries(master_bib_file, citekeys):
-    """
-    Extract bibtex entries from master_bib_file that have certain citekeys.
-    Return the entries sorted by citekey.
-    """
-    if len(citekeys) == 0:
-        return []
-    with open(master_bib_file, "r", encoding="utf-8") as file:
-        master_bib = file.read()
-    bibtex_entries = []
-    for citekey in citekeys:
-        match = re.search(
-            r"@.*?\{" + citekey + r"\,[\s\S]+?\n\}\n", master_bib, re.UNICODE
-        )
-        if match is None:
-            print(f"-> Citekey '{citekey}' was not found in {master_bib_file}")
-        else:
-            bibtex_entries.append((citekey, match.group(0)))
-    return [entry[1] for entry in sorted(bibtex_entries)]
-
-
-def create_bib_file(local_bib_file, bibtex_entries):
-    """
-    Write out some bibtex entries to local_bib_file.
-    """
-    with open(local_bib_file, "w", encoding="utf-8") as file:
-        for entry in bibtex_entries:
-            file.write(entry + "\n")
-
-
-def shorten_dois(bibtex_entries):
-    """
-    Given some bibtex entries, check each one for a doi field and, if it
-    contains one, attempt to replace the doi with its short version as
-    provided by shortdoi.org.
-    """
-    new_bibtex_entries = []
-    for entry in bibtex_entries:
-        match = re.search(r"doi = \{(.+)\}", entry, re.UNICODE)
-        if match is not None:
-            doi = match.group(1).replace(r"\_", "_")
-            short_doi = get_short_doi(doi)
-            entry = entry.replace(doi.replace("_", r"\_"), short_doi)
-        new_bibtex_entries.append(entry)
-    return new_bibtex_entries
-
-
 def shorten_dois_in_db(bib_db: BibDatabase) -> BibDatabase:
     """
     Returns a BibDatabase identical to the input BibDatabase, except that any
@@ -202,11 +155,7 @@ def main(
     else:
         citekeys = extract_citekeys(manuscript_file, cite_commands)
         print(f"Found {len(citekeys)} cite keys.")
-        # bibtex_entries = extract_bibtex_entries(master_bib_file, citekeys)
-        # if short_dois:
-        #     bibtex_entries = shorten_dois(bibtex_entries)
-        # create_bib_file(local_bib_file, bibtex_entries)
-
+        
         bibtex_db = parse_bibtex_entries(bib_files, citekeys)
         if short_dois:
             bibtex_db = shorten_dois_in_db(bibtex_db)
