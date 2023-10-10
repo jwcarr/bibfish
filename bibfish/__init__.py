@@ -34,10 +34,10 @@ def extract_citekeys(manuscript_file: str, cite_commands: list) -> list:
         except FileNotFoundError:
             pass
     citations = re.findall(
-        r"\\(" + "|".join(cite_commands) + r").*?\{(.*?)\}", manuscript
+        r"\\(" + "|".join(cite_commands) + r")(\[.+?\])?.*?\{(.*?)\}", manuscript
     )
     for citation in citations:
-        for key in citation[1].replace(" ", "").split(","):
+        for key in citation[2].replace(" ", "").split(","):
             if key:
                 citekeys.append(key)
     return list(set(citekeys))
