@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=69", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+dynamic = ["version"]
+name = "bibfish"
+authors = [
+  { name="Jon Carr", email="jon.carr@rhul.ac.uk" },
+]
+description = "Extract entries from a .bib file that are cited in a .tex file"
+readme = "README.md"
+license = {text = "MIT"}
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Topic :: Text Processing :: Markup :: LaTeX",
+]
+requires-python = ">=3.6"
+dependencies = [
+  "bibtexparser>=1.4.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/jwcarr/bibfish"
+
+[project.scripts]
+bibfish = "bibfish:cli"
+
+[tool.setuptools]
+packages = ["bibfish"]
+
+[tool.setuptools_scm]
+version_file = "bibfish/_version.py"
+version_file_template = '__version__ = "{version}"'
