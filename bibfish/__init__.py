@@ -157,6 +157,17 @@ def get_short_doi(doi: str) -> str:
         return doi
 
 
+def filter_fields(bib_db: BibDatabase, drop_fields: list) -> BibDatabase:
+    """
+    Returns a BibDatabase identical to the input BibDatabase, except that
+    all fields in the drop_fields list are dropped from all entries
+    """
+    for entry in bib_db.entries:
+        for field in drop_fields:
+            entry.pop(field, None)
+    return bib_db
+
+
 def main(
     manuscript_file,
     master_bib_file,
@@ -164,6 +175,7 @@ def main(
     cite_commands,
     force_overwrite=False,
     short_dois=False,
+    drop_fields=None
 ):
     """
     Create a new local bib file from a master bib file based on the citations
@@ -181,6 +193,8 @@ def main(
     # post-processing
     if short_dois:
         bibtex_db = shorten_dois_in_db(bibtex_db)
+    if isinstance(drop_fields, list) and len(drop_fields) > 0:
+        bibtex_db = filter_fields(bibtex_db, drop_fields)
 
     # if the database has keys with 'crossref', the referenced keys must come after
     # - we ensure this by the way the process the database, but bibtexparser.dump()
@@ -249,17 +263,27 @@ def cli():
         dest="short_dois",
         help="Shorten DOIs using http://shortdoi.org/",
     )
+    parser.add_argument(
+        "--drop-fields",
+        type=str,
+        metavar="FIELDS",
+        help="Comma-separated list of fields that should be dropped from the output"
+    )
     args = parser.parse_args()
 
     bib_files = [args.master_bib_file]
     if args.bib is not None:
         bib_files.extend(args.bib)
 
+    drop_fields = [f.strip() for f in args.drop_fields.split(",")] \
+        if args.drop_fields is not None and len(args.drop_fields) > 0 else None
+
     main(
         args.manuscript_file,
         bib_files,
         args.local_bib_file,
         args.cite_commands.split(","),
-        args.force_overwrite,
-        args.short_dois,
+        force_overwrite=args.force_overwrite,
+        short_dois=args.short_dois,
+        drop_fields=drop_fields
     )
