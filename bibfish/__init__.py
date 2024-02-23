@@ -74,7 +74,11 @@ def parse_bibtex_entries(bib_files: list, citekeys: list) -> BibDatabase:
     entries in *bib_files* which match *citekeys*.
     """
     out_db = BibDatabase()
-    for bib_file in bib_files:
+    # If an entry exists in multiple bib-files, BibTeX will use the first one.
+    # Since update_database() uses update method on dictionaries, it overwrites
+    # existing entries with new ones -> process the bib-files in reversed order.
+    # (An alternative would be to rewrite the update_database() method...)
+    for bib_file in reversed(bib_files):
         with open(bib_file) as file:
             bib_database = bibtexparser.load(
                 file,
@@ -84,12 +88,32 @@ def parse_bibtex_entries(bib_files: list, citekeys: list) -> BibDatabase:
                 ),
             )
             out_db = update_bibdatabase(out_db, bib_database)
-    entries = []
-    for citekey in citekeys:
-        if citekey in out_db.entries_dict.keys():
-            entries.append(out_db.entries_dict[citekey])
-        else:
-            print(f"bibfish: Citekey '{citekey}' was not found in {bib_files}")
+    
+    # In bibtexparser 1.x, each we access of entries_dict property of BibDatabase
+    # object db calls db.get_entry_dict(), which creates db._entries_dict by
+    # reading the whole list of entries.
+    # This is VERY inefficient with multiple calls -> we create our own dict
+    out_db_dict = {entry['ID']: entry for entry in out_db.entries}
+
+    db_keys = set()  # keys in the new database
+    entries = []     # entries in the new BibDatabase object
+    key_list = citekeys
+    while len(key_list) > 0:
+        crossrefs = []
+        for citekey in key_list:
+            entry = out_db_dict.get(citekey, None)
+            if entry is None:
+                print(f"bibfish: Citekey '{citekey}' was not found in {bib_files}")
+            else:
+                db_keys.add(citekey)
+                entries.append(entry)
+                if 'crossref' in entry:
+                    xkey = entry['crossref']
+                    if xkey not in db_keys:
+                        crossrefs.append(xkey)
+        key_list = crossrefs
+
+    # override database with the selected entries
     out_db.entries = entries
     return out_db
 
@@ -147,15 +171,25 @@ def main(
     """
     if not force_overwrite and isfile(local_bib_file):
         print(f"bibfish: {local_bib_file} already exists. Use -f to force overwrite.")
-    else:
-        citekeys = extract_citekeys(manuscript_file, cite_commands)
-        if not isinstance(master_bib_file, list):
-            master_bib_file = [master_bib_file]
-        bibtex_db = parse_bibtex_entries(master_bib_file, citekeys)
-        if short_dois:
-            bibtex_db = shorten_dois_in_db(bibtex_db)
-        with open(local_bib_file, "w") as file:
-            bibtexparser.dump(bibtex_db, file)
+        return
+
+    citekeys = extract_citekeys(manuscript_file, cite_commands)
+    if not isinstance(master_bib_file, list):
+        master_bib_file = [master_bib_file]
+    bibtex_db = parse_bibtex_entries(master_bib_file, citekeys)
+
+    # post-processing
+    if short_dois:
+        bibtex_db = shorten_dois_in_db(bibtex_db)
+
+    # if the database has keys with 'crossref', the referenced keys must come after
+    # - we ensure this by the way the process the database, but bibtexparser.dump()
+    #   sorts keys alphabetically by default -> have to be disabled for crossref
+    db_writer = bibtexparser.bwriter.BibTexWriter()
+    if any('crossref' in entry for entry in bibtex_db.entries):
+        db_writer.order_entries_by = None
+    with open(local_bib_file, "w") as file:
+        bibtexparser.dump(bibtex_db, file, db_writer)
 
 
 def cli():

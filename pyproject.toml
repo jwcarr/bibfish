@@ -21,7 +21,7 @@ classifiers = [
 ]
 requires-python = ">=3.6"
 dependencies = [
-  "bibtexparser>=1.4.1",
+  "bibtexparser==1.4.1",
 ]
 
 [project.urls]
