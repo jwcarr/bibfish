@@ -1,3 +1,21 @@
+bibfish 0.3 - 2024-03-20
+========================
+
+Added
+-----
+
+- Support for crossrefs. Cross-referenced Bibtex entries will be extracted automatically and placed in the output bib file.
+
+- New `drop-fields` option, which allows you to drop Bibtext fields in the output bib file (e.g., abstracts, filenames, notes, and other unwanted data).
+
+Changed
+-------
+
+- If multiple master files are specified and there are duplicate citekeys, earlier bib files will now take priority over later files.
+
+- Bibfish is now fixed to version 1.4.1 of Bibtexparser to avoid potential issues with the upcoming version 2 release.
+
+
 bibfish 0.2.1 - 2023-10-10
 ==========================
 
