@@ -3,9 +3,9 @@ import argparse
 import json
 import re
 import urllib.request
-
 import bibtexparser
 from bibtexparser.bibdatabase import BibDatabase
+
 
 try:
     from ._version import __version__
@@ -49,16 +49,14 @@ def find_imported_files(manuscript: str) -> list:
     filenames found, so that these can be resursively expanded. The filename
     may have a .tex extension or no extension.
     """
-    includeinputfiles = re.findall(r"\\(include|input).*?\{(.*?)\}", manuscript)
-    importfiles = re.findall(r"\\import.*?\{(.*?)\}.*?\{(.*?)\}", manuscript)
     found_filenames = []
+    for included_file in re.findall(r"\\(include|input).*?\{(.*?)\}", manuscript):
+        if included_file[1]:
+            found_filenames.append(included_file[1])
+    for included_file in re.findall(r"\\import.*?\{(.*?)\}.*?\{(.*?)\}", manuscript):
+        if included_file[1]:
+            found_filenames.append(included_file[0] + included_file[1])
     filenames = []
-    for inputfile in includeinputfiles:
-        if inputfile[1]:
-            found_filenames.append(inputfile[1])
-    for inputfile in importfiles:
-        if inputfile[1]:
-            found_filenames.append(inputfile[0] + inputfile[1])
     for filename in found_filenames:
         if "." in filename:
             if filename[-4:] == ".tex":
@@ -74,11 +72,7 @@ def parse_bibtex_entries(bib_files: list, citekeys: list) -> BibDatabase:
     entries in *bib_files* which match *citekeys*.
     """
     out_db = BibDatabase()
-    # If an entry exists in multiple bib-files, BibTeX will use the first one.
-    # Since update_database() uses update method on dictionaries, it overwrites
-    # existing entries with new ones -> process the bib-files in reversed order.
-    # (An alternative would be to rewrite the update_database() method...)
-    for bib_file in reversed(bib_files):
+    for bib_file in reversed(bib_files):  # give priority to earlier bib files
         with open(bib_file) as file:
             bib_database = bibtexparser.load(
                 file,
@@ -88,32 +82,24 @@ def parse_bibtex_entries(bib_files: list, citekeys: list) -> BibDatabase:
                 ),
             )
             out_db = update_bibdatabase(out_db, bib_database)
-    
-    # In bibtexparser 1.x, each we access of entries_dict property of BibDatabase
-    # object db calls db.get_entry_dict(), which creates db._entries_dict by
-    # reading the whole list of entries.
-    # This is VERY inefficient with multiple calls -> we create our own dict
-    out_db_dict = {entry['ID']: entry for entry in out_db.entries}
-
-    db_keys = set()  # keys in the new database
-    entries = []     # entries in the new BibDatabase object
+    out_db_entries = {entry["ID"]: entry for entry in out_db.entries}
+    db_citekeys = set()  # citekeys in the new database
+    entries = []  # entries in the new BibDatabase object
     key_list = citekeys
     while len(key_list) > 0:
         crossrefs = []
         for citekey in key_list:
-            entry = out_db_dict.get(citekey, None)
+            entry = out_db_entries.get(citekey, None)
             if entry is None:
                 print(f"bibfish: Citekey '{citekey}' was not found in {bib_files}")
             else:
-                db_keys.add(citekey)
+                db_citekeys.add(citekey)
                 entries.append(entry)
-                if 'crossref' in entry:
-                    xkey = entry['crossref']
-                    if xkey not in db_keys:
+                if "crossref" in entry:
+                    xkey = entry["crossref"]
+                    if xkey not in db_citekeys:
                         crossrefs.append(xkey)
         key_list = crossrefs
-
-    # override database with the selected entries
     out_db.entries = entries
     return out_db
 
@@ -170,38 +156,37 @@ def filter_fields(bib_db: BibDatabase, drop_fields: list) -> BibDatabase:
 
 def main(
     manuscript_file,
-    master_bib_file,
+    master_bib_files,
     local_bib_file,
     cite_commands,
     force_overwrite=False,
     short_dois=False,
-    drop_fields=None
+    drop_fields=None,
 ):
     """
-    Create a new local bib file from a master bib file based on the citations
-    in a manuscript file.
+    Create a new local bib file from a (set of) master bib file(s) based on
+    the citations found in a manuscript file.
     """
     if not force_overwrite and isfile(local_bib_file):
         print(f"bibfish: {local_bib_file} already exists. Use -f to force overwrite.")
         return
 
     citekeys = extract_citekeys(manuscript_file, cite_commands)
-    if not isinstance(master_bib_file, list):
-        master_bib_file = [master_bib_file]
-    bibtex_db = parse_bibtex_entries(master_bib_file, citekeys)
+    if not isinstance(master_bib_files, list):
+        master_bib_files = [master_bib_files]
+    bibtex_db = parse_bibtex_entries(master_bib_files, citekeys)
 
-    # post-processing
     if short_dois:
         bibtex_db = shorten_dois_in_db(bibtex_db)
+
     if isinstance(drop_fields, list) and len(drop_fields) > 0:
         bibtex_db = filter_fields(bibtex_db, drop_fields)
 
-    # if the database has keys with 'crossref', the referenced keys must come after
-    # - we ensure this by the way the process the database, but bibtexparser.dump()
-    #   sorts keys alphabetically by default -> have to be disabled for crossref
+    # ensure crossrefs are sorted after? the referencing entries
     db_writer = bibtexparser.bwriter.BibTexWriter()
-    if any('crossref' in entry for entry in bibtex_db.entries):
+    if any("crossref" in entry for entry in bibtex_db.entries):
         db_writer.order_entries_by = None
+
     with open(local_bib_file, "w") as file:
         bibtexparser.dump(bibtex_db, file, db_writer)
 
@@ -224,7 +209,7 @@ def cli():
         "master_bib_file",
         action="store",
         type=str,
-        help="Master .bib file to extract BibTeX entries from",
+        help="Master .bib file to extract BibTeX entries from. If you have multiple .bib files, use the --bib option to supply additional files.",
     )
     parser.add_argument(
         "local_bib_file",
@@ -236,18 +221,16 @@ def cli():
         "-b",
         "--bib",
         nargs="*",
-        help="Additional .bib files to extract BibTeX entries from.  If the same "
-        "citekey is in more than one .bib file, the information from the last "
-        "file in the list is used (the master_bib_file is considered first in "
-        "the list).",
+        help="Additional .bib files to extract BibTeX entries from. If the same citekey exists in multiple .bib files, earlier .bib files take priority over later ones.",
     )
     parser.add_argument(
+        "-c",
         "--cc",
         action="store",
         type=str,
         default="cite,citet,citep",
         dest="cite_commands",
-        help="Cite commands separated by commas (default: 'cite,citet,citep')",
+        help="Comma-separated list of cite commands (default: 'cite,citet,citep')",
     )
     parser.add_argument(
         "-f",
@@ -265,25 +248,31 @@ def cli():
     )
     parser.add_argument(
         "--drop-fields",
+        action="store",
         type=str,
         metavar="FIELDS",
-        help="Comma-separated list of fields that should be dropped from the output"
+        dest="drop_fields",
+        help="Comma-separated list of BibTex fields to drop in the local .bib file",
     )
     args = parser.parse_args()
 
-    bib_files = [args.master_bib_file]
+    master_bib_files = [args.master_bib_file]
     if args.bib is not None:
-        bib_files.extend(args.bib)
+        master_bib_files.extend(args.bib)
 
-    drop_fields = [f.strip() for f in args.drop_fields.split(",")] \
-        if args.drop_fields is not None and len(args.drop_fields) > 0 else None
+    cite_commands = [cc.strip() for cc in args.cite_commands.split(",")]
+
+    if args.drop_fields is not None and len(args.drop_fields) > 0:
+        drop_fields = [f.strip() for f in args.drop_fields.split(",")]
+    else:
+        drop_fields = None
 
     main(
-        args.manuscript_file,
-        bib_files,
-        args.local_bib_file,
-        args.cite_commands.split(","),
+        manuscript_file=args.manuscript_file,
+        master_bib_files=master_bib_files,
+        local_bib_file=args.local_bib_file,
+        cite_commands=cite_commands,
         force_overwrite=args.force_overwrite,
         short_dois=args.short_dois,
-        drop_fields=drop_fields
+        drop_fields=drop_fields,
     )
