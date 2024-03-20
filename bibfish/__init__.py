@@ -182,7 +182,9 @@ def main(
     if isinstance(drop_fields, list) and len(drop_fields) > 0:
         bibtex_db = filter_fields(bibtex_db, drop_fields)
 
-    # ensure crossrefs are sorted after? the referencing entries
+    # If there are crossrefs, do not sort alphabetically. This is a hack and
+    # should be fixed by extracting the crossrefs separately and
+    # concatenating them to the end of the output file.
     db_writer = bibtexparser.bwriter.BibTexWriter()
     if any("crossref" in entry for entry in bibtex_db.entries):
         db_writer.order_entries_by = None
