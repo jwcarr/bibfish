@@ -7,6 +7,7 @@ import bibtexparser
 from bibtexparser.bibdatabase import BibDatabase
 
 
+
 try:
     from ._version import __version__
 except ImportError:
@@ -22,7 +23,14 @@ def extract_citekeys(manuscript_file: str, cite_commands: list) -> list:
     if len(cite_commands) == 0:
         return []
     with open(manuscript_file, "r") as file:
-        manuscript = file.read()
+        full_manuscript = file.read()
+
+    uncommented_lines = []
+    for line in full_manuscript.splitlines():
+        if not line.strip().startswith("%"):
+            uncommented_lines.append(line)
+    manuscript = "\n".join(uncommented_lines)
+
     citekeys = []
     try:
         manuscript = manuscript.split(r"\begin{document}")[1]
