@@ -45,14 +45,16 @@ class TestBibtexParser(unittest.TestCase):
 
         self.assertEqual(new_db.entries, entries1 + entries2)
 
+
 class TestCitekeys(unittest.TestCase):
 
     def test_extract_citekeys(self):
 
         with patch(
             "bibfish.open",
-            mock_open(read_data=dedent(
-                r"""\
+            mock_open(
+                read_data=dedent(
+                    r"""\
                 \documentclass{book}
                 % If there are commented lines, which contain
                 % \begin{document}
@@ -62,7 +64,8 @@ class TestCitekeys(unittest.TestCase):
                 This line has a citation \citep{ref1}.
                 This one doesn't.
                 """
-            ))
+                )
+            ),
         ):
             citekeys = bibfish.extract_citekeys("dummy.tex", ["cite", "citet", "citep"])
             self.assertEqual(len(citekeys), 1)

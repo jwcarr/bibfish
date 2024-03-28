@@ -7,7 +7,6 @@ import bibtexparser
 from bibtexparser.bibdatabase import BibDatabase
 
 
-
 try:
     from ._version import __version__
 except ImportError:
