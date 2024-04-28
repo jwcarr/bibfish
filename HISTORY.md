@@ -1,3 +1,12 @@
+bibfish 0.3.1 - 2024-04-28
+==========================
+
+Changed
+-------
+
+- Bibfish will now ignore commented out lines in the manuscript file.
+
+
 bibfish 0.3 - 2024-03-20
 ========================
 
