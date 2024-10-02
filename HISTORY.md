@@ -1,3 +1,17 @@
+bibfish 0.3.3 - 2024-10-02
+==========================
+
+Added
+-----
+
+- Option to specify the encoding of tex/bibtext files, defaulting to UTF-8.
+
+Changed
+-------
+
+- Bibfish now defaults to UTF-8 encoding.
+
+
 bibfish 0.3.2 - 2024-06-13
 ==========================
 

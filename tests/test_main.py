@@ -16,6 +16,7 @@ def test_main():
             local_bib_file=output_bib_file,
             cite_commands=["textcite", "parencite", "possessivecite"],
             force_overwrite=True,
+            encoding="utf-8",
             drop_fields=["abstract"],
         )
 

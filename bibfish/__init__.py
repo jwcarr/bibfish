@@ -13,7 +13,9 @@ except ImportError:
     __version__ = "???"
 
 
-def extract_citekeys(manuscript_file: str, cite_commands: list) -> list:
+def extract_citekeys(
+    manuscript_file: str, cite_commands: list, encoding: str = "utf-8"
+) -> list:
     """
     Search manuscript_file for any cite commands and return the citekeys they
     make reference to. If the manuscript has any nested files (through input,
@@ -21,7 +23,7 @@ def extract_citekeys(manuscript_file: str, cite_commands: list) -> list:
     """
     if len(cite_commands) == 0:
         return []
-    with open(manuscript_file, "r") as file:
+    with open(manuscript_file, "r", encoding=encoding) as file:
         full_manuscript = file.read()
 
     uncommented_lines = []
@@ -37,7 +39,7 @@ def extract_citekeys(manuscript_file: str, cite_commands: list) -> list:
         pass
     for nestfile in find_imported_files(manuscript):
         try:
-            citekeys += extract_citekeys(nestfile, cite_commands)
+            citekeys += extract_citekeys(nestfile, cite_commands, encoding=encoding)
         except FileNotFoundError:
             pass
     citations = re.findall(
@@ -74,14 +76,16 @@ def find_imported_files(manuscript: str) -> list:
     return filenames
 
 
-def parse_bibtex_entries(bib_files: list, citekeys: list) -> BibDatabase:
+def parse_bibtex_entries(
+    bib_files: list, citekeys: list, encoding: str = "utf-8"
+) -> BibDatabase:
     """
     Return a bibtexparser.bibdatabase.BibDatabase which contains only the
     entries in *bib_files* which match *citekeys*.
     """
     out_db = BibDatabase()
     for bib_file in reversed(bib_files):  # give priority to earlier bib files
-        with open(bib_file) as file:
+        with open(bib_file, "r", encoding=encoding) as file:
             bib_database = bibtexparser.load(
                 file,
                 parser=bibtexparser.bparser.BibTexParser(
@@ -168,6 +172,7 @@ def main(
     local_bib_file,
     cite_commands,
     force_overwrite=False,
+    encoding="utf-8",
     short_dois=False,
     drop_fields=None,
 ):
@@ -179,10 +184,10 @@ def main(
         print(f"bibfish: {local_bib_file} already exists. Use -f to force overwrite.")
         return
 
-    citekeys = extract_citekeys(manuscript_file, cite_commands)
+    citekeys = extract_citekeys(manuscript_file, cite_commands, encoding=encoding)
     if not isinstance(master_bib_files, list):
         master_bib_files = [master_bib_files]
-    bibtex_db = parse_bibtex_entries(master_bib_files, citekeys)
+    bibtex_db = parse_bibtex_entries(master_bib_files, citekeys, encoding=encoding)
 
     if short_dois:
         bibtex_db = shorten_dois_in_db(bibtex_db)
@@ -197,7 +202,7 @@ def main(
     if any("crossref" in entry for entry in bibtex_db.entries):
         db_writer.order_entries_by = None
 
-    with open(local_bib_file, "w") as file:
+    with open(local_bib_file, "w", encoding=encoding) as file:
         bibtexparser.dump(bibtex_db, file, db_writer)
 
 
@@ -251,6 +256,15 @@ def cli():
         help="Overwrite the local .bib file if it already exists",
     )
     parser.add_argument(
+        "-e",
+        "--encoding",
+        action="store",
+        type=str,
+        default="utf-8",
+        dest="encoding",
+        help="Character encoding of the tex and bibtex files (default: 'utf-8')",
+    )
+    parser.add_argument(
         "--sdoi",
         action="store_true",
         dest="short_dois",
@@ -283,6 +297,7 @@ def cli():
         local_bib_file=args.local_bib_file,
         cite_commands=cite_commands,
         force_overwrite=args.force_overwrite,
+        encoding=args.encoding,
         short_dois=args.short_dois,
         drop_fields=drop_fields,
     )
