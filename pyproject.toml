@@ -10,18 +10,26 @@ authors = [
 ]
 description = "Extract entries from a .bib file that are cited in a .tex file"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE.md"]
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Science/Research",
   "Topic :: Text Processing :: Markup :: LaTeX",
 ]
-requires-python = ">=3.6"
+requires-python = ">=3.8"
 dependencies = [
-  "bibtexparser==1.4.1",
+  "bibtexparser==1.4.2",
+]
+
+[dependency-groups]
+dev = [
+  "black>=20.0",
+  "build>=1.2",
+  "pytest>=8.3.5",
+  "twine==6.0.1",
 ]
 
 [project.urls]

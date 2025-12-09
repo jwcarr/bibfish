@@ -82,14 +82,4 @@ Bibfish relies on [BibtexParser](https://github.com/sciunto-org/python-bibtexpar
 Contributing
 ------------
 
-Bibfish is in an early stage of development, but I am very happy to receive bug reports and suggestions via the [GitHub Issues page](https://github.com/jwcarr/bibfish/issues). If you'd like to work on new features or fix stuff that's currently broken, please feel free to fork the repo and/or raise an issue to discuss details. Before sending a pull request, you should check that the unit tests pass using [Pytest](https://pytest.org):
-
-```shell
-pytest tests/
-```
-
-and run [Black](https://black.readthedocs.io) over the codebase to normalize the style:
-
-```shell
-black bibfish/
-```
+This project is in the stable/maintenance phase and is not under active development. I am only aiming to fix bugs and keep it compatible with current versions of Python so that it remains useful to the community. With that in mind, contributions are very welcome, but please read the `CONTRIBUTING` file before submitting a pull request.
