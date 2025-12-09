@@ -1,3 +1,12 @@
+bibfish 0.3.4 - 2025-12-09
+==========================
+
+General
+-------
+
+- Moved the project to the stable development phase and added a CONTRIBUTING.md file.
+
+
 bibfish 0.3.3 - 2024-10-02
 ==========================
 
